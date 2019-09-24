@@ -13,18 +13,23 @@
 #   Check Package:             'Cmd + Shift + E'
 #   Test Package:              'Cmd + Shift + T'
 
-read_maxquant <- function(path, TMT.k, TMT.nterm)
+read_maxquant <- function(path, TMT.k, TMT.nterm, Nterm.mods)
 {
   data <- read_tsv(path)
   # colnames(data)$`TMT.nterm`
-  filtered.data <- select(data, "Sequence","Length", "Modifications", "Acetyl (Protein N-term)", TMT.k, TMT.nterm, "Missed cleavages")
-  print(filtered.data)
-  filtered.data <- filtered.data %>% rename("TMT10-K abc" = `TMT.k`, "TMT10-Nterm xyz" = `TMT.nterm`)
+
+  #nterm <- unite(Nterm.mods, col="total", sep = "")
+  for (row in 1:nrow(Nterm.mods)) {
+    Nterm.mods$total <- rowSums(Nterm.mods)
+  }
+ #  Nterm.mods$total <-
+  filtered.data <- select(data, "Sequence","Length", "Modifications", Nterm.mods$total, TMT.k, TMT.nterm, "Missed cleavages")
+  filtered.data <- filtered.data %>% rename("TMT10-K" = `TMT.k`, "TMT10-Nterm" = `TMT.nterm`, "N-term Modifications" = Nterm.mods$total)
 }
 
 ## yooo heres the path: my.data <- read_maxquant("~/Box/CellBio-GoldfarbLab/Users/Ria Jasuja/evidence.txt", "TMT10-Nterm")
 
-CalculateLabellingEfficiency <- function(filtered.data)
+Calculate_Labelling_Efficiency <- function(filtered.data)
   {
     #compute expected tags (amount of K and N-term) and observed tags (the number of hits in the TMT columns)
 
@@ -38,13 +43,13 @@ CalculateLabellingEfficiency <- function(filtered.data)
     for (row in 1:nrow(filtered.data))
     #for (row in 1:1)
       {
-        expected.tags <- expected.tags + str_count(filtered.data[row, "Sequence"], "K") + str_count(filtered.data[row, "Acetyl (Protein N-term)"], "0")
+        expected.tags <- expected.tags + str_count(filtered.data[row, "Sequence"], "K") + str_count(filtered.data[row, nterm], "0")
         detected.tags <- detected.tags + filtered.data[row, "TMT10-K"] + filtered.data[row, "TMT10-Nterm"]
 
         expected.lysine <- expected.lysine + str_count(filtered.data[row, "Sequence"], "K")
         detected.lysine <- detected.lysine + filtered.data[row, "TMT10-K"]
 
-        expected.nterm <- expected.nterm + str_count(filtered.data[row, "Acetyl (Protein N-term)"], "0")
+        expected.nterm <- expected.nterm + str_count(filtered.data[row, nterm], "0")
         detected.nterm <- detected.nterm + filtered.data[row, "TMT10-Nterm"]
 
       }
@@ -52,7 +57,7 @@ CalculateLabellingEfficiency <- function(filtered.data)
    # expected.tags
   # detected.tags
 
-    filtered.data$expected_tags <- str_count(filtered.data$Sequence, "K") + str_count(filtered.data$`Acetyl (Protein N-term)`, "0")
+    filtered.data$expected_tags <- str_count(filtered.data$Sequence, "K") + str_count(filtered.data$nterm, "0")
     filtered.data$detected_tags <- filtered.data$"TMT10-K" + filtered.data$"TMT10-Nterm"
 
     filtered.data$labelling_efficiency <- filtered.data$expected_tags - filtered.data$detected_tags
