@@ -16,13 +16,13 @@ calc_labeling_efficiency <- function(filtered.data)
   for (row in 1:nrow(filtered.data))
     #for (row in 1:1)
   {
-    expected.tags <- expected.tags + str_count(filtered.data[row, "Sequence"], "K") + str_count(filtered.data[row, nterm], "0")
+    expected.tags <- expected.tags + str_count(filtered.data[row, "Sequence"], "K") + str_count(filtered.data[row, "N-term Modifications"], "0")
     detected.tags <- detected.tags + filtered.data[row, "TMT10-K"] + filtered.data[row, "TMT10-Nterm"]
 
     expected.lysine <- expected.lysine + str_count(filtered.data[row, "Sequence"], "K")
     detected.lysine <- detected.lysine + filtered.data[row, "TMT10-K"]
 
-    expected.nterm <- expected.nterm + str_count(filtered.data[row, nterm], "0")
+    expected.nterm <- expected.nterm + str_count(filtered.data[row, "N-term Modifications"], "0")
     detected.nterm <- detected.nterm + filtered.data[row, "TMT10-Nterm"]
 
   }
@@ -30,7 +30,7 @@ calc_labeling_efficiency <- function(filtered.data)
   # expected.tags
   # detected.tags
 
-  filtered.data$expected_tags <- str_count(filtered.data$Sequence, "K") + str_count(filtered.data$nterm, "0")
+  filtered.data$expected_tags <- str_count(filtered.data$Sequence, "K") + str_count(filtered.data$"N-term Modifications", "0")
   filtered.data$detected_tags <- filtered.data$"TMT10-K" + filtered.data$"TMT10-Nterm"
 
   filtered.data$labelling_efficiency <- filtered.data$expected_tags - filtered.data$detected_tags
@@ -51,17 +51,17 @@ calc_labeling_efficiency <- function(filtered.data)
 
   #calculate overal label efficiency
   calculate.labelling.efficiency <- detected.tags/expected.tags
-  print(as.numeric(calculate.labelling.efficiency))
+  #print(as.numeric(calculate.labelling.efficiency))
 
   #calculate K label efficiency
   lysine.labelling.efficiency <- detected.lysine/expected.lysine
-  print(lysine.labelling.efficiency)
+  #print(lysine.labelling.efficiency)
 
   #calculate N term label efficiency
   nterm.labelling.efficiency <- detected.nterm/expected.nterm
-  print(nterm.labelling.efficiency)
+  #print(nterm.labelling.efficiency)
 
-  filtered.data
+  tibble("Labelling Efficiency" = calculate.labelling.efficiency, "Lysine Labelling Efficiency" = lysine.labelling.efficiency, "N term Labelling Efficiency" = nterm.labelling.efficiency)
 }
 
 
