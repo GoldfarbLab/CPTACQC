@@ -15,20 +15,18 @@
 
 # Reads MaxQuant's "Evidence.txt" file and converts it into our internal QC format.
 read_maxquant <- function(path,
-                           TMT_N_mod = "TMT10 (N-term)",
                            TMT_K_mod = "TMT10 (K)",
+                           TMT_N_mod = "TMT10 (N-term)",
                            N_term_blocking_mods = c("Acetyl (Protein N-term)"),
                            K_blocking_mods = c(),
                            phospho_mod = "Phospho (STY)")
 {
   data <- read_tsv(path)
 
-  Total_Nterm_mods <- rowSums(select(data, N_term_blocking_mods))
-
   #organize table a bit to make it easier to work with
 
-  filtered.data <- select(data, "Sequence","Length", "Modifications", "Missed cleavages", TMT_K_mod, TMT_N_mod, N_term_blocking_mods,)
-  filtered.data$Total_Nterm_Mods <- Total_Nterm_mods
+  filtered.data <- select(data, "Sequence","Length", "Modifications", "Missed cleavages", TMT_N_mod, TMT_K_mod, N_term_blocking_mods,)
+  filtered.data$Total_Nterm_Mods <- rowSums(select(data, N_term_blocking_mods))
   filtered.data <- filtered.data %>% rename("TMT10-K" = `TMT_K_mod`, "TMT10-Nterm" = `TMT_N_mod`, "N-term Modifications" = `Total_Nterm_Mods`)
 
   #compute expected tags (amount of K and N-term) and observed tags (the number of hits in the TMT columns) for each row and add them to their own columns

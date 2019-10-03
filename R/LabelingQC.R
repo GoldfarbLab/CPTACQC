@@ -17,8 +17,8 @@ calc_labeling_efficiency <- function(filtered.data)
   nterm.labelling.efficiency <- sum(filtered.data$detected_nterm)/sum(filtered.data$expected_nterm)
 
   #create a tibble with these three values inside of it
-  tibble("Labelling Efficiency" = calculate.labelling.efficiency, "Lysine Labelling Efficiency" = lysine.labelling.efficiency, "N term Labelling Efficiency" = nterm.labelling.efficiency)
-
+  efficiency.calculations <- tibble("Labelling Efficiency" = calculate.labelling.efficiency, "Lysine Labelling Efficiency" = lysine.labelling.efficiency, "N term Labelling Efficiency" = nterm.labelling.efficiency)
+  efficiency.calculations
 }
 
 
