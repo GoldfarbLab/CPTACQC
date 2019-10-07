@@ -2,6 +2,10 @@
 
 ## yooo heres the path: my.data <- read_maxquant("~/Box/CellBio-GoldfarbLab/Users/Ria Jasuja/evidence.txt", "TMT10-K", "TMT10-Nterm", c("Acetyl (Protein N-term)"))
 
+# INPUT: path to MaxQuant's evidence.txt file and modification names
+#
+# OUTPUT: internal peptide-level formatted data
+#
 # Reads MaxQuant's "Evidence.txt" file and converts it into our internal QC format.
 #
 # Returns a tibble with columns for the number of possible and observed TMT labels.
@@ -12,8 +16,8 @@
 # If only one of the TMT.N and TMT.K columns are NA, then throw a warning.
 # The values of the internal QC column for the NA label should also be NA.
 #
-
-# Reads MaxQuant's "Evidence.txt" file and converts it into our internal QC format.
+# Removes Reverses and Potential contaminants
+#
 read_maxquant <- function(path,
                            TMT_K_mod = "TMT10 (K)",
                            TMT_N_mod = "TMT10 (N-term)",
