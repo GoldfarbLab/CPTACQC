@@ -1,6 +1,6 @@
 # READ AND FORMAT DATA  ------------------------------------------------------------------------------------------------
 
-## yooo heres the path: my.data <- read_maxquant("~/Box/CellBio-GoldfarbLab/Users/Ria Jasuja/evidence.txt", "TMT10-K", "TMT10-Nterm", c("Acetyl (Protein N-term)"))
+## yooo heres the path: my.data <- read_maxquant("~/Box/CellBio-GoldfarbLab/Users/Ria Jasuja/modificationSpecificPeptides.txt", "TMT10-K", "TMT10-Nterm", c("Acetyl (Protein N-term)"))
 
 # INPUT: path to MaxQuant's evidence.txt file and modification names
 #
@@ -27,14 +27,15 @@ read_maxquant <- function(path,
 {
   data <- read_tsv(path)
 
-  #organize table a bit to make it easier to work with
+  #select the columns that contain "Experiment " (experiment and a space)
+  experiments <- grep("Experiment ", colnames(data), ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE, value = TRUE)
 
-  filtered.data <- select(data, "Sequence","Length", "Modifications", "Missed cleavages", TMT_N_mod, TMT_K_mod, N_term_blocking_mods,)
+  #organize table a bit to make it easier to work with
+  filtered.data <- select(data, "Sequence","Modifications", "Missed cleavages", TMT_N_mod, TMT_K_mod, N_term_blocking_mods, experiments)
   filtered.data$Total_Nterm_Mods <- rowSums(select(data, N_term_blocking_mods))
   filtered.data <- filtered.data %>% rename("TMT10-K" = `TMT_K_mod`, "TMT10-Nterm" = `TMT_N_mod`, "N-term Modifications" = `Total_Nterm_Mods`)
 
   #compute expected tags (amount of K and N-term) and observed tags (the number of hits in the TMT columns) for each row and add them to their own columns
-
   filtered.data$expected_lysine <- str_count(filtered.data$Sequence, "K")
   filtered.data$detected_lysine <- filtered.data$"TMT10-K"
 
@@ -42,7 +43,6 @@ read_maxquant <- function(path,
   filtered.data$detected_nterm <- filtered.data$"TMT10-Nterm"
 
   # calculate total expected.tags and detected.tags for each column either this way or by adding the values of the columns calculated above
-
   filtered.data$expected_tags <- str_count(filtered.data$Sequence, "K") + str_count(filtered.data$"N-term Modifications", "0")
   filtered.data$detected_tags <- filtered.data$"TMT10-K" + filtered.data$"TMT10-Nterm"
 
@@ -51,12 +51,13 @@ read_maxquant <- function(path,
   #if expected > detected, its partially labelled
   #if expected = 0, its completely unlabeled
 
-  filtered.data$labelling_efficiency <- filtered.data$expected_tags - filtered.data$detected_tags
+  filtered.data$labeling_efficiency <- filtered.data$expected_tags - filtered.data$detected_tags
 
-  filtered.data$labelling_efficiency[filtered.data$expected_tags - filtered.data$detected_tags == 0 & filtered.data$expected_tags > 0] <- "Fully Labelled"
-  filtered.data$labelling_efficiency[filtered.data$expected_tags - filtered.data$detected_tags > 0] <- "Partially Labelled"
-  filtered.data$labelling_efficiency[filtered.data$expected_tags > 0 & filtered.data$detected_tags == 0] <- "Unlabelled"
-  filtered.data$labelling_efficiency[filtered.data$expected_tags == 0] <- "No Sites Available"
+  filtered.data$labeling_efficiency[filtered.data$expected_tags - filtered.data$detected_tags == 0 & filtered.data$expected_tags > 0] <- "Fully Labeled"
+  filtered.data$labeling_efficiency[filtered.data$expected_tags - filtered.data$detected_tags > 0] <- "Partially Labeled"
+  filtered.data$labeling_efficiency[filtered.data$expected_tags > 0 & filtered.data$detected_tags == 0] <- "Unlabeled"
+  filtered.data$labeling_efficiency[filtered.data$expected_tags == 0] <- "No Sites Available"
+  filtered.data$labeling_efficiency[filtered.data$detected_tags - filtered.data$expected_tags > 0] <- "Overlabeled"
 
   #if there are more detected than expected, throw a warning to user
 
