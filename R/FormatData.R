@@ -1,6 +1,6 @@
 # READ AND FORMAT DATA  ------------------------------------------------------------------------------------------------
 
-## yooo heres the path: my.data <- read_maxquant("~/Box/CellBio-GoldfarbLab/Users/Ria Jasuja/modificationSpecificPeptides.txt", "TMT10-K", "TMT10-Nterm", c("Acetyl (Protein N-term)"))
+## yooo heres the path: my.peptide.data <- read_maxquant("~/Box/CellBio-GoldfarbLab/Users/Ria Jasuja/modificationSpecificPeptides.txt", "TMT10-K", "TMT10-Nterm", c("Acetyl (Protein N-term)"), "Phospho (STY)")
 
 # INPUT: path to MaxQuant's evidence.txt file and modification names
 #
@@ -18,7 +18,7 @@
 #
 # Removes Reverses and Potential contaminants
 #
-read_maxquant <- function(path,
+read_maxquant_mod_specific_peptides <- function(path,
                            TMT_K_mod = "TMT10 (K)",
                            TMT_N_mod = "TMT10 (N-term)",
                            N_term_blocking_mods = c("Acetyl (Protein N-term)"),
@@ -31,9 +31,9 @@ read_maxquant <- function(path,
   experiments <- grep("Experiment ", colnames(data), ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE, value = TRUE)
 
   #organize table a bit to make it easier to work with
-  filtered.data <- select(data, "Sequence","Modifications", "Missed cleavages", TMT_N_mod, TMT_K_mod, N_term_blocking_mods, experiments)
+  filtered.data <- select(data, "Sequence","Modifications", "Missed cleavages", TMT_N_mod, TMT_K_mod, N_term_blocking_mods, phospho_mod, experiments)
   filtered.data$Total_Nterm_Mods <- rowSums(select(data, N_term_blocking_mods))
-  filtered.data <- filtered.data %>% rename("TMT10-K" = `TMT_K_mod`, "TMT10-Nterm" = `TMT_N_mod`, "N-term Modifications" = `Total_Nterm_Mods`)
+  filtered.data <- filtered.data %>% rename("TMT10-K" = `TMT_K_mod`, "TMT10-Nterm" = `TMT_N_mod`, "N-term Modifications" = `Total_Nterm_Mods`, "Phospho (STY)" = `phospho_mod`)
 
   #compute expected tags (amount of K and N-term) and observed tags (the number of hits in the TMT columns) for each row and add them to their own columns
   filtered.data$expected_lysine <- str_count(filtered.data$Sequence, "K")
@@ -73,6 +73,30 @@ read_maxquant <- function(path,
   return(filtered.data)
 }
 
+#COUNT HOW MANY PHOSPHO SITES THERE ARE PER PEPTIDE
+#data <- count_maxquant_phospho_sites("~/Box/CellBio-GoldfarbLab/Users/Ria Jasuja/modificationSpecificPeptides.txt", "Phospho (STY)")
+count_maxquant_phospho_sites <- function(path,
+                                         phospho_mod = "Phospho (STY)")
+{
+  data <- read_tsv(path)
+  filtered.data <- select(data, "Sequence", "Modifications", "Phospho (STY)")
+}
+
+#COUNT HOW MANY STYS THERE ARE OVER 75% CONFIDENCE
+# my.phospho.data <- read_maxquant_phospho_sites("~/Box/CellBio-GoldfarbLab/Users/Ria Jasuja/Phospho (STY)Sites.txt", "Localization prob", "Amino acid")
+read_maxquant_phospho_sites <- function(path,
+                                        localization_prob = "Localization prob",
+                                        amino_acid = "Amino acid")
+{
+  data <- read_tsv(path)
+
+  fractions <- grep("Localization prob ", colnames(data), ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE, value = TRUE)
+
+  filtered.data <- select(data,"Proteins", localization_prob, amino_acid, fractions)
+  filtered.data <- filtered.data %>% rename("Localization prob" = `localization_prob`, "Amino acid" = `amino_acid`)
+
+
+}
 #
 format_spectrum_mill <- function(path,
                                  TMT_N_mod,
