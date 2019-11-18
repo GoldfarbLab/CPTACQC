@@ -44,20 +44,23 @@ calc_phospho_localized <- function(filtered.data)
                                   "% T" = (threonine/totalabovepercent)*100,
                                   "Tyrosine" = tyrosine,
                                   "% Y" = (tyrosine/totalabovepercent)*100)
+}
 
+calc_phospho_fractions <- function(filtered.data)
+{
   fractions <- grep("Localization prob ", colnames(filtered.data), ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE, value = TRUE)
-
-  localized_phosph_data$Fraction <- "All"
+  calc_all_data <- calc_phospho_localized(filtered.data)
+  calc_all_data$Fraction <- "All"
 
   for (i in fractions)
   {
     calc_stats_fraction <- subset(filtered.data, filtered.data[[i]] != "NA")
     fraction_data <- calc_phospho_localized(calc_stats_fraction)
     fraction_data$Fraction <- i
-    fraction_stats <- rbind(localized_phosph_data, fraction_data)
+    calc_all_data <- rbind(calc_all_data, fraction_data)
   }
 
-  fraction_stats
+  calc_all_data[, c(ncol(calc_all_data),(seq(2, ncol(calc_all_data)-1)))]
 }
 
 
